@@ -23,6 +23,9 @@ from sklearn.ensemble import (
     VotingClassifier,
 )
 
+import numpy as np
+np.random.seed(42)
+
 CSV_NAME = "data_clean.csv"
 TARGET_COL = "SuccessfulBool"
 COLS_YAML = "cols.yaml"
@@ -47,7 +50,6 @@ def main():
     df = pd.read_csv(csv_path)
 
     # Feature engineering
-    df["usd_goal"] = np.log1p(df["usd_goal"])
     df["text"] = df[text_cols].agg(" ".join, axis=1)
     df.drop(columns=text_cols, inplace=True)
 
@@ -68,20 +70,12 @@ def main():
             ), "text"),
         ]
     )
-    logreg = LogisticRegression(
-        penalty="l2",
-        solver="saga",
-        C=2.0,          # a bit stronger than default
-        max_iter=5000,
-        random_state=42,
-        n_jobs=-1
-    )
     
     models = {}
     catboost_params = {
-        "depth": [6, 7, 8],
-        "l2_leaf_reg": [10, 15, 20],
-        "border_count": [16, 32, 64],
+        "depth": [9],
+        "l2_leaf_reg": [15],
+        "border_count": [16],
     }
     for depth, l2, bc in product(
         catboost_params["depth"],
@@ -101,10 +95,26 @@ def main():
             random_state=42,
             verbose=False,
         )
-    models["LogReg TFIDF"] = Pipeline([
-        ("prep", logreg_prep),
-        ("clf", logreg),
-    ])
+    #     models[name].fit(X, y)
+    #     print(models[name].get_feature_importance(prettified=True))
+    logreg_param_grid = {
+        "penalty": ["l2"],
+        "C": [0.5, 1.0, 2.0, 4.0],
+    }
+    for pen, C in product(logreg_param_grid["penalty"], logreg_param_grid["C"]):
+        name = f"LogReg_{pen}_C{C}"
+        clf = LogisticRegression(
+            penalty=pen,
+            solver="saga",
+            C=C,
+            max_iter=5000,
+            random_state=42,
+            n_jobs=-1,
+        )
+        models[name] = Pipeline([
+            ("prep", logreg_prep),
+            ("clf", clf),
+        ])
 
     # Cross-validation
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
