@@ -1,0 +1,80 @@
+drop_cols:
+  # Non-Value-Added
+  - "id"
+  - "photo"                   # Json
+  - "goal"                    # usd_goal = goal * static_usd_rate
+  - "currency_symbol"         # Colinear with currency
+  - "currency_trailing_code"  # Not sure what this is...
+  - "deadline"                # Raw datetime string + redundant
+  - "created_at"              # ^
+  - "launched_at"             # ^
+  - "deadline_yr"             # Can't generalize outside dataset time range
+  - "created_at_yr"           # ^
+  - "launched_at_yr"          # ^
+  - "create_to_launch"        # Already have *_days version
+  - "launch_to_deadline"      # ^
+  - "creator"                 # Json
+  - "location"                # ^
+  - "profile"                 # ^
+  - "urls"                    # ^
+  - "source_url"
+  - "friends"                 # All null
+  - "is_starred"              # ^
+  - "is_backing"              # ^
+  - "permissions"             # ^
+  
+  # Leakage/Effects (Not a Cause for Success)
+  - "disable_communication"       # Mostly happens after cancelled/suspended
+  - "spotlight"                   # Colinear with output + Don't have at launch
+  - "staff_pick"                  # Could happen before or after launch
+  - "pledged"                     # Don't have at launch
+  - "usd_pledged"                 # ^
+  - "backers_count"               # ^
+  - "state"                       # ^
+  - "state_changed_at"            # ^
+  - "state_changed_at_weekday"    # ^
+  - "state_changed_at_month"      # ^
+  - "state_changed_at_day"        # ^
+  - "state_changed_at_yr"         # ^
+  - "state_changed_at_hr"         # ^
+  - "launch_to_state_change"      # ^
+  - "launch_to_state_change_days" # ^
+
+numeric_cols:
+  - "usd_goal" # Derived from goal using static_usd_rate
+  - "static_usd_rate"
+  - "name_len_clean"
+  - "blurb_len_clean"
+  - "name_len"
+  - "blurb_len"
+  - "create_to_launch_days"
+  - "launch_to_deadline_days"
+
+categorical_cols:
+  - "country"
+  - "currency"
+  - "category"
+  - "deadline_weekday"
+  - "created_at_weekday"
+  - "launched_at_weekday"
+  - "deadline_month"
+  - "created_at_month"
+  - "launched_at_month"
+  - "deadline_day"
+  - "created_at_day"
+  - "launched_at_day"
+  - "deadline_hr"
+  - "created_at_hr"
+  - "launched_at_hr"
+  - "USorGB"
+  - "TOPCOUNTRY"
+  - "LaunchedTuesday"
+  - "DeadlineWeekend"
+  - "location_state"
+  - "location_type"
+
+text_cols:
+  - "name"
+  - "blurb"
+  - "slug"
+
