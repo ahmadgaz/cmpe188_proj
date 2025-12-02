@@ -71,90 +71,11 @@ def plot_histogram(data: pd.DataFrame,
     plt.close("all")
     return
 
-def cramers_v(x, y):
-    """Cramér's V for two categorical vectors."""
-    confusion = pd.crosstab(x, y)
-    chi2 = chi2_contingency(confusion)[0]
-    n = confusion.sum().sum()
-    if n == 0:
-        return np.nan
-    phi2 = chi2 / n
-    r, k = confusion.shape
-    # Bias correction
-    phi2_corr = max(0, phi2 - (k - 1) * (r - 1) / (n - 1))
-    r_corr = r - (r - 1)**2 / (n - 1)
-    k_corr = k - (k - 1)**2 / (n - 1)
-    denom = min((k_corr - 1), (r_corr - 1))
-    if denom <= 0:
-        return np.nan
-    return np.sqrt(phi2_corr / denom)
-
-def correlation_ratio(categories, values):
-    """Correlation ratio (eta) for categorical -> numeric."""
-    # categories: 1D array-like of discrete labels
-    # values: 1D array-like of numeric
-    categories = np.array(categories)
-    values = np.array(values)
-
-    mask = ~pd.isna(categories) & ~pd.isna(values)
-    categories = categories[mask]
-    values = values[mask]
-
-    if len(values) == 0:
-        return np.nan
-
-    overall_mean = np.mean(values)
-    ss_between = 0.0
-    for c in np.unique(categories):
-        vals_c = values[categories == c]
-        if len(vals_c) == 0:
-            continue
-        ss_between += len(vals_c) * (np.mean(vals_c) - overall_mean) ** 2
-
-    ss_total = np.sum((values - overall_mean) ** 2)
-    if ss_total == 0:
-        return 0.0
-    return np.sqrt(ss_between / ss_total)
-
-def mixed_corr(df: pd.DataFrame,
-               cat_cols: list,
-               num_cols: list) -> pd.DataFrame:
-    all_cols = num_cols + cat_cols
-
-    corr_mat = pd.DataFrame(
-        np.zeros((len(all_cols), len(all_cols))),
-        index=all_cols, # type: ignore
-        columns=all_cols, # type: ignore
-        dtype=float
-    )
-
-    # numeric-numeric (Spearman is robust for non-linear/ordinal)
-    corr_num = df[num_cols].corr(method="spearman") # type: ignore
-    for i in num_cols:
-        for j in num_cols:
-            corr_mat.loc[i, j] = corr_num.loc[i, j]
-
-    # categorical-categorical (Cramér's V)
-    for i in cat_cols:
-        for j in cat_cols:
-            corr_mat.loc[i, j] = cramers_v(df[i], df[j])
-
-    # numeric-categorical (correlation ratio)
-    for n in num_cols:
-        for c in cat_cols:
-            eta = correlation_ratio(df[c], df[n])
-            corr_mat.loc[n, c] = eta
-            corr_mat.loc[c, n] = eta
-
-    return corr_mat
-
 def correlation_matrix(data: pd.DataFrame,
                        title: str,
-                       cat_cols: list,
-                       num_cols: list,
                        outpath: Path):
     """Plot correlation matrix heatmap for given data"""
-    corr = mixed_corr(data, cat_cols, num_cols) 
+    corr = data.corr(method="pearson")
     plt.figure(figsize=(10, 8))
     mask = np.triu(np.ones_like(corr, dtype=bool))
     sns.heatmap(corr, mask=mask, square=True, annot=False, cmap="viridis")
@@ -169,15 +90,13 @@ def correlation_matrix(data: pd.DataFrame,
 def scatter_plots(data: pd.DataFrame,
                     y_name: str,
                     title: str,
-                    cat_cols: list,
-                    num_cols: list,
                     outpath: Path,
                     n_top: int = 5):
     """Plot scatter matrix for n_top correlated features"""
-    corr = mixed_corr(data, cat_cols + [y_name], num_cols) # TODO generalize for cat/num outputs
+    corr = data.corr(method="pearson")
     y_corr = corr[y_name].drop(y_name).abs().sort_values(ascending=False) # type: ignore
     top_features = y_corr.head(n_top).index.tolist()
-    subset_cols = top_features + [y_name]
+    subset_cols = top_features
     plt.figure(figsize=(10, 10))
     scatter_matrix(data[subset_cols], diagonal="hist", figsize=(10, 10)) # type: ignore
     plt.suptitle(title, y=1.02)
@@ -305,19 +224,15 @@ def main():
 
     # Correlation matrix
     clean_corr_path = outdir / CLEAN_CORR_NAME    
-    correlation_matrix(X, # type: ignore
+    correlation_matrix(X[numeric_cols].join(y), # type: ignore
                         title="Cleaned Numeric Features Correlation Matrix",
-                        cat_cols=categorical_cols,
-                        num_cols=numeric_cols,
                         outpath=clean_corr_path)
 
     # Scatter plots for top correlated features
     clean_scatter_path = outdir / "03_cleaned_numeric_scatter_matrix_top.png"
-    scatter_plots(X.join(y), # type: ignore
+    scatter_plots(X[numeric_cols].join(y), # type: ignore
                     y_name=y_name,
                     title="Cleaned Numeric Features Scatter Matrix (Top Correlated)",
-                    cat_cols=categorical_cols,
-                    num_cols=numeric_cols,
                     outpath=clean_scatter_path)
 
     # Bar plots for categorical features
