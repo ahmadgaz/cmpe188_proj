@@ -19,6 +19,9 @@ drop_cols:
   - "is_starred"              # ^
   - "is_backing"              # ^
   - "permissions"             # ^
+  - "deadline_yr"             # Can't generalize outside dataset time range
+  - "created_at_yr"           # ^
+  - "launched_at_yr"          # ^
   
   # Leakage/Effects (Not a Cause for Success)
   - "disable_communication"       # Mostly happens after cancelled/suspended
@@ -36,49 +39,49 @@ drop_cols:
   - "state_changed_at_hr"         # ^
   - "launch_to_state_change"      # ^
   - "launch_to_state_change_days" # ^
-  - "deadline_yr"             # Can't generalize outside dataset time range
-  - "created_at_yr"           # ^
-  - "launched_at_yr"          # ^
+
+  - "goal_per_day"
+  - "created_at_weekday"
+  - "created_at_hr"
+  - "deadline_month"
+  - "LaunchedTuesday"
+  - "blurb_len"
+  - "blurb_len_clean"
+  - "deadline_day"
+  - "launched_at_month"
+  - "location_type"
+  - "launched_at_day"
+  - "deadline_weekday"
+  - "static_usd_rate"
+  - "TOPCOUNTRY"
+  - "currency"
+  - "DeadlineWeekend"
+  - "created_at_day"
+  - "USorGB"
+  - "country"
+  - "location_state"
 
 numeric_cols:
   - "usd_goal" # Derived from goal using static_usd_rate
-  - "static_usd_rate"
   - "name_len_clean"
-  - "blurb_len_clean"
   - "name_len"
-  - "blurb_len"
   - "create_to_launch_days"
   - "launch_to_deadline_days"
-  - "goal_per_day"
   - "category_success_rate"
+  - "category_popularity"
+  - "category_median_goal"
+  - "goal_vs_cat_median"
+  - "location_popularity"
+  - "location_success_rate"
 
 categorical_cols:
-  - "country"
-  - "currency"
   - "category"
-  - "deadline_weekday"
-  - "created_at_weekday"
   - "launched_at_weekday"
-  - "deadline_month"
   - "created_at_month"
-  - "launched_at_month"
-  - "deadline_day"
-  - "created_at_day"
-  - "launched_at_day"
   - "deadline_hr"
-  - "created_at_hr"
   - "launched_at_hr"
-  - "USorGB"
-  - "TOPCOUNTRY"
-  - "LaunchedTuesday"
-  - "DeadlineWeekend"
-  - "location_state"
-  - "location_type"
 
 text_cols:
   - "name"
   - "blurb"
   - "slug"
-
-
-# Get structured data from JSONs (HasVideo from profile)

@@ -95,8 +95,8 @@ def main():
             random_state=42,
             verbose=False,
         )
-    #     models[name].fit(X, y)
-    #     print(models[name].get_feature_importance(prettified=True))
+        models[name].fit(X, y)
+        print(models[name].get_feature_importance(prettified=True))
     logreg_param_grid = {
         "penalty": ["l2"],
         "C": [0.5, 1.0, 2.0, 4.0],
